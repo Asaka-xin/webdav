@@ -1,37 +1,53 @@
-> ⚠️ Disclaimer: this repository is not actively maintained. If you are interested in maintaining it, please [contact me](https://github.com/hacdias/webdav/issues/144).
+> 本仓库将用中文帮助你搭建自定义的WebDAV
 
 # webdav
 
-![Build](https://github.com/hacdias/webdav/workflows/Tests/badge.svg)
-[![Go Report Card](https://goreportcard.com/badge/github.com/hacdias/webdav?style=flat-square)](https://goreportcard.com/report/hacdias/webdav)
-[![Version](https://img.shields.io/github/release/hacdias/webdav.svg?style=flat-square)](https://github.com/hacdias/webdav/releases/latest)
-[![Docker Pulls](https://img.shields.io/docker/pulls/hacdias/webdav)](https://hub.docker.com/r/hacdias/webdav)
+**感谢源仓库作者**
 
-## Install
+[前往源仓库](https://github.com/hacdias/webdav)
 
-Please refer to the [Releases page](https://github.com/hacdias/webdav/releases) for more information. There, you can either download the binaries or find the Docker commands to install WebDAV.
+一份中文指南，主要针对`Windows`平台与`Linux`平台
 
-## Usage
+此为`Linux`上的部署指南，[前往查看Windows上的配置](./on-windows.md)
 
-```webdav``` command line interface is really easy to use so you can easily create a WebDAV server for your own user. By default, it runs on a random free port and supports JSON, YAML and TOML configuration. An example of a YAML configuration with the default configurations:
+# 安装
+
+如果你希望使用`Docker`来安装，那么你可以使用源仓库中的`Dockerfile`来自行构建镜像
+
+请新开一个浏览器窗口去下载页 [Releases page](https://github.com/hacdias/webdav/releases)
+
+下载并解压好文件
+
+# 配置
+
+请注意文件操作权限
+
+我推荐在`webdav`的同级目录创建配置文件`./config.yaml`
+
+以下是来自源仓库的配置模板
 
 ```yaml
-# Server related settings
+# 启动配置
 address: 0.0.0.0
-port: 0
+# 请自行设定监听端口,示例5599端口
+port: 5599
+# 启用授权
 auth: true
+# 禁用TLS时使用http，启用时使用https
 tls: false
 cert: cert.pem
 key: key.pem
+# URL前缀，建议使用默认
 prefix: /
 debug: false
 
-# Default user settings (will be merged)
+# 默认用户设置 (will be merged)
 scope: .
 modify: true
 rules: []
 
 # CORS configuration
+# 跨域设置
 cors:
   enabled: true
   credentials: true
@@ -45,14 +61,22 @@ cors:
     - Content-Length
     - Content-Range
 
+# 用户自定义配置
 users:
+# 账户名与密码(请不要对字符串值打引号)
   - username: admin
     password: admin
-    scope: /a/different/path
+# 访问地址，绝对路径
+    scope: /share/01
+# 是否拥有修改文件权限
+    modify: true
+# 另一个用户的配置
   - username: encrypted
     password: "{bcrypt}$2y$10$zEP6oofmXFeHaeMfBNLnP.DO8m.H.Mwhd24/TOX2MWLxAExXi4qgi"
+# 读取环境变量
   - username: "{env}ENV_USERNAME"
     password: "{env}ENV_PASSWORD"
+    
   - username: basic
     password: basic
     modify:   false
@@ -64,32 +88,28 @@ users:
         modify: true
 ```
 
-There are more ways to customize how you run WebDAV through flags and environment variables. Please run `webdav --help` for more information on that.
+使用`./webdav -h`获得更多帮助提示
 
-### Systemd
+# 支持Systemd
 
-An example of how to use this with `systemd` is on [webdav.service.example](/webdav.service.example).
+支持`systemd` 查看详情 [webdav.service.example](/webdav.service.example).
 
-### CORS
+# 在Alist中使用
 
-The `allowed_*` properties are optional, the default value for each of them will be `*`. `exposed_headers` is optional as well, but is not set if not defined. Setting `credentials` to `true` will allow you to:
+驱动选择`webdav`
 
-1. Use `withCredentials = true` in javascript.
-2. Use the `username:password@host` syntax.
+> URL:http://username@host:port
+>
+> username:
+>
+> password:
+>
+> 示例填写(admin/admin)你在其它地方可能会需要手动填写URL
+>
+> URL:http://admin@192.168.1.23:5599
 
-### Reverse Proxy Service
-When you use a reverse proxy implementation like `Nginx` or `Apache`, please note the following fields to avoid causing `502` errors
-```text
-location / {
-        proxy_pass http://127.0.0.1:8080;
-        proxy_set_header X-Real-IP $remote_addr;
-        proxy_set_header REMOTE-HOST $remote_addr;
-        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-        proxy_set_header Host $http_host;
-        proxy_redirect off;
-    }
-```
+# 启动
 
-## License
+`./webdav`优先读取`./config.yaml`配置文件
 
-MIT © [Henrique Dias](https://hacdias.com)
+可选的启动方式`./webdav -c config的地址` 查看更多`./webdav -h`
